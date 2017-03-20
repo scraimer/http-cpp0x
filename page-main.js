@@ -1,3 +1,6 @@
+// The following taken from https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest
+// Since it's a code sample, it's licensed from that site under the Public Domain, as specified in https://developer.mozilla.org/en-US/docs/MDN/About#Copyrights_and_licenses
+
 /*\
 |*|
 |*|  :: XMLHttpRequest.prototype.sendAsBinary() Polyfill ::
