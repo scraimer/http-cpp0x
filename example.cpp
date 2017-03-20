@@ -12,7 +12,12 @@ class my_request_handler_t
  public:
 	void operator()( request_t const & request )
 	{
-		cout << "Got a request! Content:" << endl;
+		cout << "Got a request!" << endl;
+		if( request._uri.size() )
+		{
+			cout << " URI: \"" << request._uri << "\"" << endl;
+		}
+		cout << "Content:" << endl;
 		auto& buf = request.get_buffer();
 		cout << "\t";
 		for( auto it = buf.cbegin(); it != buf.cend(); ++it )

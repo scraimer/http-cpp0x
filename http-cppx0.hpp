@@ -33,7 +33,9 @@ class request_t
 	client_t & _client;
 
  public:
-	request_t( buffer_t const & buffer, client_t & client ) : _buffer( buffer ), _client( client )
+	std::string _uri;
+
+	request_t( buffer_t const & buffer, client_t & client ) : _buffer( buffer ), _client( client ), _uri( "" )
 	{
 	}
 
@@ -175,7 +177,25 @@ template <typename REQUEST_HANDLER> class server_t
 			return;
 		}
 
+		// Got a valid request, so let's prepare it before sending it to the handler
 		request_t req( buf, client );
+
+		// Find the URI
+		char const uri_prefix[] = "GET ";
+		auto uri_pos =
+		    std::search( buf.cbegin(), buf.cend(), &uri_prefix[0], &uri_prefix[sizeof( uri_prefix ) - 1] );
+		uri_pos += sizeof( uri_prefix ) - 1;
+		if( uri_pos != buf.cend() )
+		{
+			auto uri_end = std::find( uri_pos, buf.cend(), ' ' );
+			if( uri_end != buf.cend() )
+			{
+				std::string uri;
+				uri.insert( uri.cbegin(), uri_pos, uri_end );
+				req._uri = uri;
+			}
+		}
+
 		_request_handler( req );
 
 		// After having serviced the request, close the client
