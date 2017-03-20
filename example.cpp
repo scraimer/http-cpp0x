@@ -10,7 +10,7 @@ class my_request_handler_t
 {
 	void operator()( request_t const & request )
 	{
-
+		cout << "Got a request!" << endl;
 	}
 };
 
