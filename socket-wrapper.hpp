@@ -5,9 +5,10 @@
 
 /////////////////////////////////////////////////////////////////////////////////////
 // socket wrapper, just so I don't have to worry about a socket staying unreleased when it goes out of scope
-// 
-// I just can't imagine this is a very good implemenation, so it's just a placeholder to be replaced with something better later.
-// 
+//
+// I just can't imagine this is a very good implemenation, so it's just a placeholder to be replaced with
+// something better later.
+//
 
 #include <sys/socket.h>
 #include <unistd.h>
@@ -37,6 +38,11 @@ class internal_tcp_socket_wrapper_t
 	static const int listen_socket_backlog = 5;
 	int _socket_fd;
 
+	// Don't allow copy constructor
+	internal_tcp_socket_wrapper_t( internal_tcp_socket_wrapper_t const & ) = delete;
+	internal_tcp_socket_wrapper_t( internal_tcp_socket_wrapper_t & ) = delete;
+	internal_tcp_socket_wrapper_t & operator=( internal_tcp_socket_wrapper_t const & );
+
  public:
 	internal_tcp_socket_wrapper_t() : _socket_fd( SOCKET_ERROR )
 	{
@@ -58,6 +64,11 @@ class internal_tcp_socket_wrapper_t
 	int get_socket_fd() const
 	{
 		return _socket_fd;
+	}
+
+	bool is_valid() const
+	{
+		return _socket_fd != SOCKET_ERROR;
 	}
 
 	socket_error_t listen( int const port )
