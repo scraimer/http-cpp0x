@@ -1,5 +1,5 @@
 .ycm_extra_conf.pyc
 .gdbinit
 example
-page-index.h
-page-main-js.h
+examples/example1/pages/index.html.h
+examples/example1/pages/main.js.h

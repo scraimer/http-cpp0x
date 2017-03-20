@@ -4,8 +4,8 @@
 #include <iterator>
 #include <map>
 
-#include "page-index.h"
-#include "page-main-js.h"
+#include "pages/index.html.h"
+#include "pages/main.js.h"
 
 using namespace cppx0::http;
 using std::cout;
@@ -38,13 +38,13 @@ struct pages_t
 		page_t page;
 
 		page._name = "/";
-		page._content = page_index_html;
-		page._content_len = page_index_html_len;
+		page._content = pages_index_html;
+		page._content_len = pages_index_html_len;
 		_pages[page._name] = page;
 
 		page._name = "/main.js";
-		page._content = page_main_js;
-		page._content_len = page_main_js_len;;
+		page._content = pages_main_js;
+		page._content_len = pages_main_js_len;;
 		_pages[page._name] = page;
 	}
 

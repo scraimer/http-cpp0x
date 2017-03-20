@@ -1,0 +1,7 @@
+CXX = clang++
+CXXFLAGS = --std=c++0x -g
+LDLIBS = -lstdc++
+
+INCLUDE_DIR = ../../include
+CPPFLAGS = -I $(INCLUDE_DIR) -I pages/
+
