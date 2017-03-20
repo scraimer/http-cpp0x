@@ -1,0 +1,81 @@
+---
+Language:        Cpp
+# BasedOnStyle:  LLVM
+AlignAfterOpenBracket: true
+AlignEscapedNewlinesLeft: false
+AlignOperands:   true
+AlignTrailingComments: true
+AlignConsecutiveAssignments: false
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterDefinitionReturnType: false
+AlwaysBreakTemplateDeclarations: false
+AlwaysBreakBeforeMultilineStrings: false
+BreakBeforeBinaryOperators: None
+BreakBeforeTernaryOperators: true
+BinPackParameters: true
+BinPackArguments: true
+ConstructorInitializerIndentWidth: 4
+DerivePointerAlignment: false
+ExperimentalAutoDetectBinPacking: false
+IndentWrappedFunctionNames: false
+IndentFunctionDeclarationAfterType: false
+MaxEmptyLinesToKeep: 1
+KeepEmptyLinesAtTheStartOfBlocks: true
+NamespaceIndentation: None
+ObjCBlockIndentWidth: 2
+ObjCSpaceAfterProperty: false
+ObjCSpaceBeforeProtocolList: true
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyBreakComment: 300
+PenaltyBreakString: 1000
+PenaltyBreakFirstLessLess: 120
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 60
+SpacesBeforeTrailingComments: 1
+Cpp11BracedListStyle: true
+SpacesInSquareBrackets: false
+SpacesInAngles:  false
+SpaceInEmptyParentheses: false
+SpacesInCStyleCastParentheses: false
+SpaceAfterCStyleCast: false
+SpacesInContainerLiterals: true
+SpaceBeforeAssignmentOperators: true
+ContinuationIndentWidth: 4
+CommentPragmas:  '^ IWYU pragma:'
+ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH ]
+DisableFormat:   false
+
+# Modified
+AccessModifierOffset: -2
+IndentWidth:     3
+TabWidth:        3
+UseTab:          ForIndentation
+BreakBeforeBraces: Allman
+ColumnLimit:     108
+SpacesInParentheses: true
+SpaceBeforeParens: Never
+IndentCaseLabels: true
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+BreakConstructorInitializersBeforeComma: true
+AllowShortFunctionsOnASingleLine: Empty
+# We need this until we upgrade Jenkins form GCC 4.4.7 and MSVC to 2013
+Standard:        Cpp03
+# Don't sort the #include directives
+SortIncludes: false
+
+# Under Contention
+PointerAlignment: Middle
+...
+
+
+# Possible Contention Issues:
+# 1. SpacesInSquareBrackets + SpaceBeforeParens
+# 2. ColumnLimit
+# 3. UseTab / TabWidth / IndentWidth
+# 4. PointerAlignment ( I prefer Middle, I think everyone else prefers left or right)
+
+
