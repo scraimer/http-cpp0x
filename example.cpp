@@ -2,20 +2,78 @@
 
 #include <iostream>
 #include <iterator>
+#include <map>
+
+#include "page-index.h"
+#include "page-main-js.h"
 
 using namespace cppx0::http;
 using std::cout;
 using std::endl;
 
+struct pages_t
+{
+	struct page_t
+	{
+		std::string _name;
+		unsigned char const * _content;
+		unsigned int _content_len;
+
+		page_t() : _name( "" ), _content( nullptr ), _content_len( -1 )
+		{
+		}
+
+		page_t(page_t const & other )
+		{
+			_name = other._name;
+			_content = other._content;
+			_content_len = other._content_len;
+		}
+	};
+
+	std::map<std::string, page_t> _pages;
+
+	pages_t()
+	{
+		page_t page;
+
+		page._name = "/";
+		page._content = page_index_html;
+		page._content_len = page_index_html_len;
+		_pages[page._name] = page;
+
+		page._name = "/main.js";
+		page._content = page_main_js;
+		page._content_len = page_main_js_len;;
+		_pages[page._name] = page;
+	}
+
+	bool get_page(std::string const page_name, page_t & page )
+	{
+		auto it = _pages.find( page_name );
+		if( it != _pages.end() )
+		{
+			page = it->second;
+			return true;
+		}
+
+		return false;
+	};
+};
+
 class my_request_handler_t
 {
+ private:
+	pages_t _pages;
+
  public:
 	void operator()( request_t const & request )
 	{
-		cout << "Got a request!" << endl;
-		if( request._uri.size() )
+		cout << "\nGot a request!" << endl;
+		if( request._uri._raw.size() )
 		{
-			cout << " URI: \"" << request._uri << "\"" << endl;
+			cout << "URI: \"" << request._uri._raw << "\"" << endl;
+			cout << "  path = \"" << request._uri._path << "\"" << endl;
 		}
 		cout << "Content:" << endl;
 		auto& buf = request.get_buffer();
@@ -30,7 +88,39 @@ class my_request_handler_t
 			}
 		}
 
-		request.send_to_client( buf );
+		std::string query = request._uri._query;
+
+		char const raw_header_404[] = "HTTP/1.0 404 Not Found\r\n\r\n";
+		buffer_t header_404;
+		header_404.insert( header_404.begin(), &raw_header_404[0], &raw_header_404[sizeof(raw_header_404) - 1]);
+
+		char const raw_header[] = "HTTP/1.0 200 OK\r\n\r\n";
+		buffer_t header_ok;
+		header_ok.insert( header_ok.begin(), &raw_header[0], &raw_header[sizeof(raw_header) - 1]);
+
+		pages_t::page_t page;
+		auto result = _pages.get_page( request._uri._path, page );
+		if( result )
+		{
+			request.send_to_client( header_ok );
+			buffer_t page_buf;
+			page_buf.insert( page_buf.begin(), &page._content[0], &page._content[page._content_len - 1] );
+			request.send_to_client( page_buf );
+		}
+		else if( request._uri._path == "/a" )
+		{
+			// Special case: We've been asked to do an action.
+			request.send_to_client( header_ok );
+			buffer_t page_buf;
+			std::string output("Got this query string:<br/>\n");
+			output += request._uri._query;
+			page_buf.insert( page_buf.begin(), output.begin(), output.end() );
+			request.send_to_client( page_buf );
+		}
+		else
+		{
+			request.send_to_client( header_404 );
+		}
 	}
 };
 

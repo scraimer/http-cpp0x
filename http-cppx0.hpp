@@ -28,14 +28,46 @@ class client_t : public internal_tcp_socket_wrapper_t
 
 class request_t
 {
+ public:
+	struct uri_t
+	{
+		std::string _raw;
+		std::string _path;
+		std::string _query;
+		std::vector<std::pair<std::string, std::string> > _query_pairs;
+
+		uri_t() : _raw( "" ), _path( "" ), _query( "" )
+		{
+		}
+
+		void set( std::string const & uri ) 
+		{
+			_raw = uri;
+
+			auto query_start = uri.find( '?' );
+			if( query_start != std::string::npos )
+			{
+				_path = uri.substr( 0, query_start );
+				_query = uri.substr( query_start + 1 );
+			}
+			else
+			{
+				_path = uri;
+			}
+
+			// TODO: parse the _query_pairs from _query
+		}
+	};
+
  private:
 	buffer_t _buffer;
 	client_t & _client;
 
  public:
-	std::string _uri;
+	uri_t _uri;
 
-	request_t( buffer_t const & buffer, client_t & client ) : _buffer( buffer ), _client( client ), _uri( "" )
+	request_t( buffer_t const & buffer, client_t & client )
+	    : _buffer( buffer ), _client( client )
 	{
 	}
 
@@ -190,9 +222,9 @@ template <typename REQUEST_HANDLER> class server_t
 			auto uri_end = std::find( uri_pos, buf.cend(), ' ' );
 			if( uri_end != buf.cend() )
 			{
-				std::string uri;
-				uri.insert( uri.cbegin(), uri_pos, uri_end );
-				req._uri = uri;
+				std::string raw_uri;
+				raw_uri.insert( raw_uri.cbegin(), uri_pos, uri_end );
+				req._uri.set( raw_uri );
 			}
 		}
 
@@ -201,7 +233,6 @@ template <typename REQUEST_HANDLER> class server_t
 		// After having serviced the request, close the client
 		client.close();
 	}
-
 
 	/** A container for all the clients belonging to the server */
 	class clients_set_t
