@@ -8,13 +8,14 @@ using std::endl;
 
 class my_request_handler_t
 {
+ public:
 	void operator()( request_t const & request )
 	{
 		cout << "Got a request!" << endl;
 	}
 };
 
-int main(int const argc, char const * const * const argv)
+int main( int const argc, char const * const * const argv )
 {
 	server_config_t cfg;
 	cfg._port = 47890;

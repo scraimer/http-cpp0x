@@ -1,8 +1,6 @@
 #ifndef CPPX0_SOCKET_WRAPPER_H_
 #define CPPX0_SOCKET_WRAPPER_H_
 
-#include <assert.h>
-
 /////////////////////////////////////////////////////////////////////////////////////
 // socket wrapper, just so I don't have to worry about a socket staying unreleased when it goes out of scope
 //
@@ -13,11 +11,22 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netinet/ip.h>
+#include <assert.h>
+#include <string>
+#include <errno.h>
+#include <vector>
+
 
 namespace cppx0
 {
 namespace http
 {
+
+/** Type for buffers. Using buffer instead of just string, since buffer may contain null-characters.
+ * 
+ * Right now I'm using std::vector since it's easy to resize. Just don't point into its data while resizing it!
+ */
+typedef std::vector<char> buffer_t;
 
 enum socket_error_t
 {
@@ -29,6 +38,7 @@ enum socket_error_t
 	SOCKET_ERROR_SETTING_SOCKOPT,
 	SOCKET_ERROR_BINDING_SOCKET,
 	SOCKET_ERROR_LISTENING_ON_SOCKET,
+	SOCKET_ERROR_ACCEPTING_CONNECTION,
 };
 
 /** Just an RAII wrapper for sockets */
@@ -46,17 +56,18 @@ class internal_tcp_socket_wrapper_t
  public:
 	internal_tcp_socket_wrapper_t() : _socket_fd( SOCKET_ERROR )
 	{
-		_socket_fd = ::socket( PF_INET, SOCK_STREAM, 0 );
-		assert( _socket_fd != SOCKET_ERROR &&
-		        "Error while creating socket. This is an early assert to make it "
-		        "easier to debug, but later calls will also be checked." );
 	}
 
 	~internal_tcp_socket_wrapper_t()
 	{
+		close();
+	}
+
+	void close()
+	{
 		if( _socket_fd != SOCKET_ERROR )
 		{
-			close( _socket_fd );
+			::close( _socket_fd );
 			_socket_fd = SOCKET_ERROR;
 		}
 	}
@@ -73,6 +84,11 @@ class internal_tcp_socket_wrapper_t
 
 	socket_error_t listen( int const port )
 	{
+		_socket_fd = ::socket( PF_INET, SOCK_STREAM, 0 );
+		assert( _socket_fd != SOCKET_ERROR &&
+		        "Error while creating socket. This is an early assert to make it "
+		        "easier to debug, but later calls will also be checked." );
+
 		assert( _socket_fd != SOCKET_ERROR &&
 		        "Cannot listen on a badly-created socket, or one that was de-allocated." );
 		if( _socket_fd == SOCKET_ERROR )
@@ -111,6 +127,94 @@ class internal_tcp_socket_wrapper_t
 		}
 
 		return SOCKET_ERROR_OK;
+	}
+
+	/** Accept incoming connection (assuming this socket is a listening socket) into the destination socket
+	 *
+	 * Returns 'OK' on success.
+	 */
+	socket_error_t accept_into( internal_tcp_socket_wrapper_t & dest )
+	{
+		if( !is_valid() )
+		{
+			return SOCKET_ERROR_INVALID_SOCKET;
+		}
+
+		int new_client_fd = ::accept( _socket_fd, nullptr, nullptr );
+		if( new_client_fd == SOCKET_ERROR )
+		{
+			return SOCKET_ERROR_ACCEPTING_CONNECTION;
+		}
+
+		dest.replace_socket_fd( new_client_fd );
+
+		return SOCKET_ERROR_OK;
+	}
+
+	socket_error_t reject_incoming_connection(std::string const & err_msg)
+	{
+		internal_tcp_socket_wrapper_t new_client;
+		auto result = accept_into( new_client );
+		if( result != SOCKET_ERROR_OK )
+		{
+			return result;
+		}
+
+		new_client.send( err_msg );
+		new_client.close();
+
+		return SOCKET_ERROR_OK;
+	}
+
+	socket_error_t send( std::string const & msg )
+	{
+		auto result = ::send( _socket_fd, msg.c_str(), msg.size(), MSG_NOSIGNAL);
+		if( result == SOCKET_ERROR )
+		{
+			return SOCKET_ERROR;
+		}
+
+		return SOCKET_ERROR_OK;
+	}
+
+	socket_error_t recv_append_to_vector( buffer_t & dest )
+	{
+		if( !is_valid() )
+		{
+			return SOCKET_ERROR_INVALID_SOCKET;
+		}
+
+		int const LEN = 16 * 1024;
+		char buf[LEN];
+
+		auto result = ::recv( _socket_fd, buf, LEN, MSG_DONTWAIT );
+		if( result == SOCKET_ERROR )
+		{
+			if( errno == EAGAIN || errno == EWOULDBLOCK )
+			{
+				return SOCKET_ERROR_OK;
+			}
+
+			return SOCKET_ERROR;
+		}
+
+		// Make sure there's enough room in the buffer
+		dest.reserve( dest.size() + result + 1 );
+
+		auto src_begin = &buf[0];
+		auto src_end = &buf[result];
+		dest.insert( dest.end(), src_begin, src_end );
+
+		return SOCKET_ERROR_OK;
+	}
+
+ private:
+	void replace_socket_fd( int const socket_fd )
+	{
+		// Close the old socket, if there was one.
+		close();
+
+		_socket_fd = socket_fd;
 	}
 };
 
