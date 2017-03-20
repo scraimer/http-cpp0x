@@ -1,6 +1,7 @@
 #include "http-cppx0.hpp"
 
 #include <iostream>
+#include <iterator>
 
 using namespace cppx0::http;
 using std::cout;
@@ -11,7 +12,20 @@ class my_request_handler_t
  public:
 	void operator()( request_t const & request )
 	{
-		cout << "Got a request!" << endl;
+		cout << "Got a request! Content:" << endl;
+		auto& buf = request.get_buffer();
+		cout << "\t";
+		for( auto it = buf.cbegin(); it != buf.cend(); ++it )
+		{
+			auto& c = *it;
+			cout << *it;
+			if( c == '\n' )
+			{
+				cout << "\t";
+			}
+		}
+
+		request.send_to_client( buf );
 	}
 };
 

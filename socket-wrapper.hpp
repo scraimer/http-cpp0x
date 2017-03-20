@@ -39,6 +39,7 @@ enum socket_error_t
 	SOCKET_ERROR_BINDING_SOCKET,
 	SOCKET_ERROR_LISTENING_ON_SOCKET,
 	SOCKET_ERROR_ACCEPTING_CONNECTION,
+	SOCKET_ERROR_DISCONNECT_BY_PEER,
 };
 
 /** Just an RAII wrapper for sockets */
@@ -166,9 +167,9 @@ class internal_tcp_socket_wrapper_t
 		return SOCKET_ERROR_OK;
 	}
 
-	socket_error_t send( std::string const & msg )
+	socket_error_t send( char const * const buf, int const buflen )
 	{
-		auto result = ::send( _socket_fd, msg.c_str(), msg.size(), MSG_NOSIGNAL);
+		auto result = ::send( _socket_fd, buf, buflen, MSG_NOSIGNAL);
 		if( result == SOCKET_ERROR )
 		{
 			return SOCKET_ERROR;
@@ -176,6 +177,18 @@ class internal_tcp_socket_wrapper_t
 
 		return SOCKET_ERROR_OK;
 	}
+
+	socket_error_t send( std::string const & msg )
+	{
+		return send( msg.c_str(), msg.size() );
+	}
+
+	socket_error_t send( buffer_t const & buf )
+	{
+		return send( &buf[0], buf.size() );
+	}
+
+
 
 	socket_error_t recv_append_to_vector( buffer_t & dest )
 	{
@@ -196,6 +209,10 @@ class internal_tcp_socket_wrapper_t
 			}
 
 			return SOCKET_ERROR;
+		}
+		else if( result == 0 )
+		{
+			return SOCKET_ERROR_DISCONNECT_BY_PEER;
 		}
 
 		// Make sure there's enough room in the buffer

@@ -15,19 +15,37 @@ namespace http
 // Forward declaration, see at the end of the file.
 class internal_tcp_socket_wrapper_t;
 
+class client_t : public internal_tcp_socket_wrapper_t
+{
+ public:
+	buffer_t _buf;
+
+	void reset()
+	{
+		_buf.clear();
+	}
+};
+
 class request_t
 {
  private:
 	buffer_t _buffer;
+	client_t & _client;
 
  public:
-	request_t( buffer_t const & buffer ) : _buffer( buffer )
+	request_t( buffer_t const & buffer, client_t & client ) : _buffer( buffer ), _client( client )
 	{
 	}
 
-	buffer_t const & get_buffer()
+	buffer_t const & get_buffer() const
 	{
 		return _buffer;
+	}
+
+	bool send_to_client( buffer_t const & buffer ) const
+	{
+		auto result = _client.send( buffer );
+		return ( result == SOCKET_ERROR_OK );
 	}
 };
 
@@ -53,7 +71,7 @@ template <typename REQUEST_HANDLER> class server_t
  private:
 	typedef REQUEST_HANDLER request_handler_t;
 
-	static int const MAX_CLIENTS = 10;
+	static int const MAX_CLIENTS = 1;
 
 	request_handler_t & _request_handler;
 	internal_tcp_socket_wrapper_t _server_socket;
@@ -131,35 +149,45 @@ template <typename REQUEST_HANDLER> class server_t
 		}
 
 		auto & new_client = *it;
+		new_client.reset();
 		_server_socket.accept_into( new_client );
 	}
 
-	void service_client( internal_tcp_socket_wrapper_t & client )
+	void service_client( client_t & client )
 	{
-		buffer_t buf;
+		buffer_t & buf = client._buf;
 		auto result = client.recv_append_to_vector( buf );
-		if( result != SOCKET_ERROR_OK)
+		if( result == SOCKET_ERROR_DISCONNECT_BY_PEER )
+		{
+			client.close();
+			return;
+		}
+		else if( result != SOCKET_ERROR_OK)
 		{
 			return;
 		}
 
 		// if got an entire HTTP header, notify the user that a request has arrived.
 		char const end_of_request[5] = "\r\n\r\n";
-		auto pos = std::search( buf.cbegin(), buf.cend(), &end_of_request[0], &end_of_request[5] );
+		auto pos = std::search( buf.cbegin(), buf.cend(), &end_of_request[0], &end_of_request[4] );
 		if( pos == buf.cend() )
 		{
 			return;
 		}
 
-		request_t req( buf );
+		request_t req( buf, client );
 		_request_handler( req );
+
+		// After having serviced the request, close the client
+		client.close();
 	}
+
 
 	/** A container for all the clients belonging to the server */
 	class clients_set_t
 	{
 	 public:
-		typedef internal_tcp_socket_wrapper_t item_t;
+		typedef client_t item_t;
 
 	 private:
 		item_t _client_sockets[MAX_CLIENTS];
@@ -201,7 +229,7 @@ template <typename REQUEST_HANDLER> class server_t
 		}
 	};
 
-	/** UnaryPredicate that checks if a socket wrapped by internal_tcp_socket_wrapper_t is in an fd_set. Use
+	/** UnaryPredicate that checks if a socket wrapped by client_t is in an fd_set. Use
 	 * after calling select(), eh? */
 	class service_readable_client
 	{
@@ -214,7 +242,7 @@ template <typename REQUEST_HANDLER> class server_t
 		{
 		}
 
-		void operator()( internal_tcp_socket_wrapper_t & sock_wrapper )
+		void operator()( client_t & sock_wrapper )
 		{
 			if( FD_ISSET( sock_wrapper.get_socket_fd(), &_fds ) )
 			{
