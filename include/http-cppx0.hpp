@@ -105,7 +105,7 @@ template <typename REQUEST_HANDLER> class server_t
  private:
 	typedef REQUEST_HANDLER request_handler_t;
 
-	static int const MAX_CLIENTS = 1;
+	static int const MAX_CLIENTS = 10;
 
 	request_handler_t & _request_handler;
 	internal_tcp_socket_wrapper_t _server_socket;
@@ -177,7 +177,8 @@ template <typename REQUEST_HANDLER> class server_t
 			// Error: Cannot accept another client. So turn away the client with an error.
 
 			std::string err_msg_out_of_resource =
-			    "Sorry, the maximum number of clients has been reached. Please try again later.";
+			    "HTTP/1.0 429 Too Many Requests\r\n\r\n"
+			    "Sorry, the maximum number of clients has been reached. Please try again later.\r\n";
 			_server_socket.reject_incoming_connection( err_msg_out_of_resource );
 			return;
 		}
