@@ -8,18 +8,6 @@ env_home = os.getenv('ENV_HOME','..')
 # CHANGE THIS LIST OF FLAGS. YES, THIS IS THE DROID YOU HAVE BEEN LOOKING FOR.
 flags = [
 		
-'-isystem',
-'/usr/share/tradigo/clang-3.9/include/c++/v1/',
-'-isystem',
-'/home/shalom/Dropbox/backups/work/dotfiles/vim/bundle/YouCompleteMe/third_party/ycmd/clang_includes/include',
-		
-'-isystem',
-env_home + '/solclient_Linux26-x86_64_opt/ex',
-'-isystem', 
-env_home + '/tom/',
-'-isystem', 
-env_home + '/libssh/src/libssh-0.7.2/include/',
-'-isystem',
 env_home + '/gmock-1.7.0/gtest/include',
 '-isystem',
 env_home + '/gmock-1.7.0/include',
@@ -27,14 +15,8 @@ env_home + '/gmock-1.7.0/include',
 env_home + '/gmock-1.7.0/gtest/include',
 '-isystem',
 env_home + '/gmock-1.7.0/include',
-'-isystem',
-env_home + '/rfa8.0.0.L1.linux/Setup/Include',
-'-isystem',
-env_home + '/rfa8.0.0.L1.linux/Setup/Include/rwf',
-'-isystem', 
-env_home + '/boost_1_60_0',
-'-isystem',
-env_home + '/gmock-1.7.0/include',
+
+'-I/home/shalom/Dropbox/dev/x0cpp/http-cppx0/include/',
 
 '-Ilib_utilities',
 '-DHAVE_CONFIG_H',

@@ -1,0 +1,92 @@
+#body
+{
+}
+
+#tab-bar
+{
+	width: 100%;
+}
+
+#tab-bar .tab
+{
+	width: 100px;
+	height: 1.2em;
+	float: left;
+	border: 2px solid black;
+	cursor: hand;
+	border-top-right-radius: 5px;
+	border-top-left-radius: 5px;
+	text-align: center;
+	margin: 0;
+	border-right-width: 0;
+}
+
+.taker
+{
+	background-color: #D9CEB2;	
+}
+
+.maker
+{
+	background-color: #99B2B7;
+}
+
+#tab-bar .tab:not(:first-child)
+{
+	border-right-width: 2px;
+}
+
+#tab-bar .tab.active
+{
+	border-bottom-color: transparent;
+}
+
+#tab-content
+{
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 90%;
+	border: 1px solid black;
+	clear:both;
+}
+
+#tab-content .tab
+{
+	display: none;
+	padding: 3px;
+}
+
+#tab-content .tab.active
+{
+	display: block;
+	height: 98%;
+}
+
+.group
+{
+	border: 1px solid black;
+	margin: 3px;
+}
+
+.group h3
+{
+	line-height: 1em;
+	margin: 0;
+	cursor: hand;
+}
+
+.group.active h3
+{
+	cursor: auto;
+}
+
+.group .content
+{
+	display: none;
+}
+
+.group.active .content
+{
+	display: block;
+}

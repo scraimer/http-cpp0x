@@ -1,18 +1,86 @@
 <html>
 
 <head>
-<script src="main.js"></script>
-<title>Example Homepage</title>
+	<script src="main.js"></script>
+	<title>Example Homepage</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
 </head>
 
 <body>
+
 <form method="get" action="a">
+	
+<div id="body">
+	
+<div id="tab-bar">
+	<div class="tab taker" onclick="activate_tab('taker')">Taker</div>
+	<div class="tab maker" onclick="activate_tab('maker')">Maker</div>
+</div>
+
+<div id="tab-content">
+	
+	
+<div class="tab taker">
+	
+	<div id="connect" class="group active">
+		<h3>Connect:</h3>
+		<div class="content">
+			<input type="button" name="connect" value="Connect"></input><br>
+		</div>
+	</div>
+
+	<div id="subscribe" class="group">
+		<h3>Subscribe:</h3>
+		<div class="content">
+			<input type="checkbox" name="ccypair" value="eurusd">EURUSD</input><br>
+			<input type="checkbox" name="ccypair" value="eurjpy">EURJPY</input><br>
+			<input type="checkbox" name="ccypair" value="eurgbp">EURGBP</input><br>
+			<input type="checkbox" name="ccypair" value="usdjpy">USDJPY</input><br>
+			<input type="checkbox" name="ccypair" value="eurchf">EURCHF</input><br>
+			<input type="checkbox" name="ccypair" value="usdcad">USDCAD</input><br>
+			<input type="checkbox" name="ccypair" value="audcad">AUDCAD</input><br>
+			<input type="checkbox" name="ccypair" value="audchf">AUDCHF</input><br>
+			<input type="checkbox" name="ccypair" value="audjpy">AUDJPY</input><br>
+			<input type="checkbox" name="ccypair" value="audnzd">AUDNZD</input><br>
+			<input type="checkbox" name="ccypair" value="audusd">AUDUSD</input><br>
+			<input type="checkbox" name="ccypair" value="cadjpy">CADJPY</input><br>
+			<input type="text" name="custom_ccyair" value="" /><input type="button" name="custom_subscribe_button" value="Subscribe to this ccypair">
+		</div>
+	</div>
+
+	<div id="trade" class="group">
+		<h3>Trade:</h3>
+		<div class="content">
+			[buy/sell] [price] [amount] [EUR/USD] [TIF] [OrderType]<br/>
+			[buy/sell] [TOB] [amount] [EUR/USD] [TIF] [OrderType]
+		</div>
+	</div>
+
+
+
+	<input type="submit" onlick="javascript:return false;" value="Refresh">
+
+</div> <!-- taker -->
+
+
+
+<div class="tab maker">
+	
 	Send Prices?
 	<input type="radio" name="send_prices" value="0">Yes</input><br>
 	<input type="radio" name="send_prices" value="1">No</input><br>
 	
 	<input type="submit" onlick="javascript:return false;" value="Go">
+
+</div> <!-- maker -->
+
+
+</div> <!-- tab-content  -->
+
+</div> <!-- container -->
+
 </form>
+
 </body>
 
 </html>

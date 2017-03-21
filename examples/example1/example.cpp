@@ -6,6 +6,7 @@
 
 #include "pages/index.html.h"
 #include "pages/main.js.h"
+#include "pages/style.css.h"
 
 using namespace cppx0::http;
 using std::cout;
@@ -45,6 +46,11 @@ struct pages_t
 		page._name = "/main.js";
 		page._content = pages_main_js;
 		page._content_len = pages_main_js_len;;
+		_pages[page._name] = page;
+
+		page._name = "/style.css";
+		page._content = pages_style_css;
+		page._content_len = pages_style_css_len;
 		_pages[page._name] = page;
 	}
 
