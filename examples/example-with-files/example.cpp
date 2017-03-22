@@ -80,6 +80,17 @@ class my_request_handler_t
 		{
 			cout << "URI: \"" << request._uri._raw << "\"" << endl;
 			cout << "  path = \"" << request._uri._path << "\"" << endl;
+
+			auto & query_pairs = request._uri._query_pairs;
+			if( query_pairs.size() > 0 )
+			{
+				cout << "Query params:\n{\n";
+				for( auto it = query_pairs.begin(); it != query_pairs.end(); ++it )
+				{
+					cout << "  " << it->first << " = \"" << it->second << "\"" << endl;
+				}
+				cout << "}\n";
+			}
 		}
 		cout << "Content:" << endl;
 		auto& buf = request.get_buffer();

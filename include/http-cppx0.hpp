@@ -6,11 +6,74 @@
 #include <sys/select.h>
 #include <algorithm>
 #include <string>
+#include <sstream>
+#include <utility>
 
 namespace cppx0
 {
 namespace http
 {
+
+std::pair<std::string, std::string> make_string_pair_from_offsets( std::string const & src,
+                                                                   int const key_start, int const key_end,
+                                                                   int const value_start,
+                                                                   int const value_end )
+{
+	std::string key = src.substr( key_start, key_end - key_start + 1 );
+	std::string val = src.substr( value_start, value_end - value_start );
+	return std::make_pair( key, val );
+}
+
+/** Iterate on a URI query string and call a function with an std::pair<std::string,std::string> where the
+ * first string is the key, and the second is the value. 
+ * 
+ * Credit: Inspired by a code sample in 
+ * 	"C++ Cookbook" by Jeff Cogswell, Jonathan Turkanis, Christopher Diggins, D. Ryan Stephens
+ * */
+template <class UnaryFunction, char PAIRS_DELIM = '&', char VALUE_DELIM = '='>
+void split_key_values_into_pairs( std::string const & src, UnaryFunction f )
+{
+	int key_start = 0;
+	int val_end = src.find( PAIRS_DELIM );
+
+	while( val_end != std::string::npos )
+	{
+		// If there's no delimeter between the key and the value, ignore it
+		auto inner_delim_pos = src.find( VALUE_DELIM, key_start );
+		if( inner_delim_pos == std::string::npos )
+		{
+			continue;
+		}
+
+		int key_end = inner_delim_pos - 1;
+		int val_start = inner_delim_pos + 1;
+
+		auto pair = make_string_pair_from_offsets( src, key_start, key_end, val_start, val_end );
+
+		f( pair );
+
+		key_start = ++val_end;
+		val_end = src.find( PAIRS_DELIM, val_end );
+
+		// Handle the last one, which won't have another PAIRS_DELIM after it
+		if( val_end  == std::string::npos )
+		{
+			// If there's no delimeter between the key and the value, ignore it
+			auto inner_delim_pos = src.find( VALUE_DELIM, key_start );
+			if( inner_delim_pos == std::string::npos )
+			{
+				continue;
+			}
+
+			int key_end = inner_delim_pos - 1;
+			int val_start = inner_delim_pos + 1;
+
+			auto pair = make_string_pair_from_offsets( src, key_start, key_end, val_start, src.length() );
+
+			f( pair );
+		}
+	}
+}
 
 // Forward declaration, see at the end of the file.
 class internal_tcp_socket_wrapper_t;
@@ -40,7 +103,7 @@ class request_t
 		{
 		}
 
-		void set( std::string const & uri ) 
+		void set( std::string const & uri )
 		{
 			_raw = uri;
 
@@ -55,8 +118,27 @@ class request_t
 				_path = uri;
 			}
 
-			// TODO: parse the _query_pairs from _query
+			split_key_values_into_pairs(
+			    _query, add_item_to_vector<std::pair<std::string, std::string> >( _query_pairs ) );
 		}
+
+	 private:
+		template <typename T>
+		class add_item_to_vector
+		{
+		 public:
+			add_item_to_vector( std::vector<T> & dest ) : _dest( dest )
+			{
+			}
+
+			void operator()( T const & item )
+			{
+				_dest.push_back( item );
+			}
+
+		 private:
+			std::vector<T> & _dest;
+		};
 	};
 
  private:
