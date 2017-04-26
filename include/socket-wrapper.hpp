@@ -1,5 +1,5 @@
-#ifndef CPPX0_SOCKET_WRAPPER_H_
-#define CPPX0_SOCKET_WRAPPER_H_
+#ifndef CPP0X_SOCKET_WRAPPER_H_
+#define CPP0X_SOCKET_WRAPPER_H_
 
 /////////////////////////////////////////////////////////////////////////////////////
 // socket wrapper, just so I don't have to worry about a socket staying unreleased when it goes out of scope
@@ -17,7 +17,7 @@
 #include <vector>
 
 
-namespace cppx0
+namespace cpp0x
 {
 namespace http
 {
@@ -236,6 +236,6 @@ class internal_tcp_socket_wrapper_t
 };
 
 } // namespace http
-} // namespace cppx0
+} // namespace cpp0x
 
-#endif // ifndef CPPX0_SOCKET_WRAPPER_H_
+#endif // ifndef CPP0X_SOCKET_WRAPPER_H_

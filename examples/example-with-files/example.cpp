@@ -1,4 +1,4 @@
-#include "http-cppx0.hpp"
+#include "http-cpp0x.hpp"
 
 #include <iostream>
 #include <iterator>
@@ -8,7 +8,7 @@
 #include "pages/main.js.h"
 #include "pages/style.css.h"
 
-using namespace cppx0::http;
+using namespace cpp0x::http;
 using std::cout;
 using std::endl;
 

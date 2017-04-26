@@ -10,7 +10,7 @@ FILE_TO_H = xxd -i $< | sed 's/\([0-9a-f]\)$$/\0, 0x00/' > $@
 pages/%.h: pages/%
 	$(FILE_TO_H)
 	
-example.o: example.cpp $(INCLUDE_DIR)/http-cppx0.hpp $(INCLUDE_DIR)/socket-wrapper.hpp $(GENERATED_HEADERS)
+example.o: example.cpp $(INCLUDE_DIR)/http-cpp0x.hpp $(INCLUDE_DIR)/socket-wrapper.hpp $(GENERATED_HEADERS)
 example: example.o
 
 .PHONY: clean

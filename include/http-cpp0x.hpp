@@ -1,5 +1,5 @@
-#ifndef CPPX0_HTTP_SERVER_H_
-#define CPPX0_HTTP_SERVER_H_
+#ifndef CPP0X_HTTP_SERVER_H_
+#define CPP0X_HTTP_SERVER_H_
 
 #include "socket-wrapper.hpp"
 #include <assert.h>
@@ -9,7 +9,7 @@
 #include <sstream>
 #include <utility>
 
-namespace cppx0
+namespace cpp0x
 {
 namespace http
 {
@@ -428,6 +428,6 @@ template <typename REQUEST_HANDLER> class server_t
 };
 
 } // namespace http
-} // namespace cppx0
+} // namespace cpp0x
 
-#endif // ifndef CPPX0_HTTP_SERVER_H_
+#endif // ifndef CPP0X_HTTP_SERVER_H_

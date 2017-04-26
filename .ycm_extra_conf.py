@@ -16,7 +16,7 @@ env_home + '/gmock-1.7.0/gtest/include',
 '-isystem',
 env_home + '/gmock-1.7.0/include',
 
-'-I/home/shalom/Dropbox/dev/x0cpp/http-cppx0/include/',
+'-I/home/shalom/Dropbox/dev/0xcpp/http-cpp0x/include/',
 
 '-DLinux',
 '-Wall',

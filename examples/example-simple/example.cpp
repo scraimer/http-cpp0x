@@ -1,10 +1,10 @@
-#include "http-cppx0.hpp"
+#include "http-cpp0x.hpp"
 
 #include <iostream>
 #include <iterator>
 #include <map>
 
-using namespace cppx0::http;
+using namespace cpp0x::http;
 using std::cout;
 using std::endl;
 
