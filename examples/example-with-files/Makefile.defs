@@ -1,6 +1,10 @@
 CXX = clang++
+CC = $(CXX)
 CXXFLAGS = --std=c++0x -g
-LDLIBS = -lstdc++
+
+ifeq ($(CXX),clang++)
+	LDLIBS = -lstdc++
+endif
 
 INCLUDE_DIR = ../../include
 CPPFLAGS = -I $(INCLUDE_DIR) -I pages/
