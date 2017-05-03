@@ -1,5 +1,7 @@
 # http-cpp0x
 
+A C++ header-only HTTP server, that can be used with older compilers (any GCC that supports c++0x)
+
 Goals:
 ------
 
