@@ -306,7 +306,8 @@ template <typename REQUEST_HANDLER> class server_t
 			if( uri_end != buf.cend() )
 			{
 				std::string raw_uri;
-				raw_uri.insert( raw_uri.cbegin(), uri_pos, uri_end );
+				// Note: It ought to be raw_uri.cbegin(), but GCC 4.8.5 chokes on that
+				raw_uri.insert( raw_uri.begin(), uri_pos, uri_end );
 				req._uri.set( raw_uri );
 			}
 		}
