@@ -22,7 +22,7 @@ License:
 
 Pick one:
 
-* Perl Artistic license. (i.e. use as you see fit, just give credit to me.)
+* MIT License (See attached LICENSE file)
 
-* Email me to explain why, and I'll grant you a Public Domain license.
+* Email me to explain why you need it, and I'll grant you a Public Domain license.
 
