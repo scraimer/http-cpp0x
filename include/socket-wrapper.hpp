@@ -28,6 +28,15 @@ namespace http
  */
 typedef std::vector<char> buffer_t;
 
+static std::ostream & operator<<( std::ostream & out, cpp0x::http::buffer_t const & src )
+{
+	for( auto c : src )
+	{
+		out << c;
+	}
+	return out;
+}
+
 enum socket_error_t
 {
 	SOCKET_ERROR = -1,

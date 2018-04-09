@@ -14,7 +14,7 @@ namespace cpp0x
 namespace http
 {
 
-std::pair<std::string, std::string> make_string_pair_from_offsets( std::string const & src,
+static std::pair<std::string, std::string> make_string_pair_from_offsets( std::string const & src,
                                                                    int const key_start, int const key_end,
                                                                    int const value_start,
                                                                    int const value_end )
@@ -33,30 +33,32 @@ std::pair<std::string, std::string> make_string_pair_from_offsets( std::string c
 template <class UnaryFunction, char PAIRS_DELIM = '&', char VALUE_DELIM = '='>
 void split_key_values_into_pairs( std::string const & src, UnaryFunction f )
 {
-	int key_start = 0;
-	int val_end = src.find( PAIRS_DELIM );
+	auto key_start = 0;
+	auto val_end = src.find( PAIRS_DELIM );
 
 	while( val_end != std::string::npos )
 	{
-		// If there's no delimeter between the key and the value, ignore it
-		auto inner_delim_pos = src.find( VALUE_DELIM, key_start );
-		if( inner_delim_pos == std::string::npos )
-		{
-			continue;
-		}
+      {
+		   // If there's no delimeter between the key and the value, ignore it
+		   auto inner_delim_pos = src.find( VALUE_DELIM, key_start );
+		   if( inner_delim_pos == std::string::npos )
+		   {
+			   continue;
+		   }
 
-		int key_end = inner_delim_pos - 1;
-		int val_start = inner_delim_pos + 1;
+		   int key_end = inner_delim_pos - 1;
+		   int val_start = inner_delim_pos + 1;
 
-		auto pair = make_string_pair_from_offsets( src, key_start, key_end, val_start, val_end );
+		   auto pair = make_string_pair_from_offsets( src, key_start, key_end, val_start, val_end );
 
-		f( pair );
+		   f( pair );
+      }
 
 		key_start = ++val_end;
 		val_end = src.find( PAIRS_DELIM, val_end );
 
 		// Handle the last one, which won't have another PAIRS_DELIM after it
-		if( val_end  == std::string::npos )
+		if( val_end == std::string::npos )
 		{
 			// If there's no delimeter between the key and the value, ignore it
 			auto inner_delim_pos = src.find( VALUE_DELIM, key_start );
@@ -147,9 +149,10 @@ class request_t
 
  public:
 	uri_t _uri;
+   buffer_t::const_iterator _body_iterator;
 
 	request_t( buffer_t const & buffer, client_t & client )
-	    : _buffer( buffer ), _client( client )
+	    : _buffer( buffer ), _client( client ), _body_iterator( _buffer.end() )
 	{
 	}
 
@@ -163,6 +166,21 @@ class request_t
 		auto result = _client.send( buffer );
 		return ( result == SOCKET_ERROR_OK );
 	}
+   
+   bool has_body() const
+   {
+      return _body_iterator != _buffer.cend();
+   }
+   
+   buffer_t::const_iterator body_cbegin() const
+   {
+      return _body_iterator;
+   }
+   
+   buffer_t::const_iterator body_cend() const
+   {
+      return _buffer.cend();
+   }
 };
 
 class server_config_t
@@ -269,6 +287,14 @@ template <typename REQUEST_HANDLER> class server_t
 		new_client.reset();
 		_server_socket.accept_into( new_client );
 	}
+   
+   static bool starts_with( buffer_t const & haystack, std::string needle )
+	{
+		auto const len = needle.size();
+      // Why len*2? Because the std::search algorithm only looks from up to needle.size() from the end.
+		auto pos = std::search( haystack.cbegin(), haystack.cbegin() + len * 2, needle.cbegin(), needle.cend() );
+		return ( pos == haystack.cbegin() );
+	}
 
 	void service_client( client_t & client )
 	{
@@ -279,37 +305,83 @@ template <typename REQUEST_HANDLER> class server_t
 			client.close();
 			return;
 		}
-		else if( result != SOCKET_ERROR_OK)
+		else if( result != SOCKET_ERROR_OK )
 		{
 			return;
 		}
 
 		// if got an entire HTTP header, notify the user that a request has arrived.
-		char const end_of_request[5] = "\r\n\r\n";
-		auto pos = std::search( buf.cbegin(), buf.cend(), &end_of_request[0], &end_of_request[4] );
-		if( pos == buf.cend() )
+		char const end_of_header[5] = "\r\n\r\n";
+		auto end_of_header_pos = std::search( buf.cbegin(), buf.cend(), &end_of_header[0], &end_of_header[4] );
+		if( end_of_header_pos == buf.cend() )
 		{
 			return;
+		}
+
+		// Use the Content-Length header to determine if we have finished reading
+		// the entire message, if it's present
+		char const content_length[] = "Content-Length: ";
+		auto len_pos = std::search( buf.cbegin(), buf.cend(), &content_length[0],
+		                            &content_length[sizeof( content_length ) - 1] );
+		if( len_pos != buf.cend () )
+		{
+			auto len_end_pos = std::find( len_pos, buf.cend(), '\r' );
+			if( len_end_pos == buf.cend() )
+			{
+				assert( false && "Error finding end of Content-Length" );
+				return;
+			}
+
+			std::string len_string( len_pos + sizeof(content_length) - 1, len_end_pos );
+			int len = std::stoi( len_string );
+			int content_body_received =
+			    std::distance( end_of_header_pos + sizeof( end_of_header ) - 1, buf.cend() );
+
+			// Is there still more that needs to be read from the socket?
+			if( content_body_received < len )
+			{
+				// Don't produce a request, wait for more incoming data (i.e. wait for next time)
+				return;
+			}
 		}
 
 		// Got a valid request, so let's prepare it before sending it to the handler
 		request_t req( buf, client );
 
-		// Find the URI
-		char const uri_prefix[] = "GET ";
-		auto uri_pos =
-		    std::search( buf.cbegin(), buf.cend(), &uri_prefix[0], &uri_prefix[sizeof( uri_prefix ) - 1] );
-		uri_pos += sizeof( uri_prefix ) - 1;
-		if( uri_pos != buf.cend() )
+		// Which method is it?
+		char const method_get[] = "GET ";
+		char const method_post[] = "POST ";
+      auto uri_begin = buf.cend();
+		if( starts_with( buf, method_get ) )
 		{
-			auto uri_end = std::find( uri_pos, buf.cend(), ' ' );
-			if( uri_end != buf.cend() )
-			{
-				std::string raw_uri;
-				// Note: It ought to be raw_uri.cbegin(), but GCC 4.8.5 chokes on that
-				raw_uri.insert( raw_uri.begin(), uri_pos, uri_end );
-				req._uri.set( raw_uri );
-			}
+			uri_begin = buf.cbegin() + sizeof( method_get ) - 1;
+		}
+		else if( starts_with( buf, method_post ) )
+		{
+			uri_begin = buf.cbegin() + sizeof( method_post ) - 1;
+		}
+		else
+		{
+			return;
+		}
+
+		// Find the URI
+		auto uri_end = std::find( uri_begin, buf.cend(), ' ' );
+		if( uri_end != buf.cend() )
+		{
+			std::string raw_uri;
+			// Note: It ought to be raw_uri.cbegin(), but GCC 4.8.5 chokes on that
+			raw_uri.insert( raw_uri.begin(), uri_begin, uri_end );
+			req._uri.set( raw_uri );
+		}
+
+		// Find the body
+		auto body_pos = end_of_header_pos + sizeof( end_of_header ) - 1;
+		if( body_pos != buf.cend() )
+		{
+			// The request object has its own copy of the buffer, so to initialize the iterator that points to
+			// the body inside that buffer, we must create a parallel iterator for that copy of the buffer.
+			req._body_iterator = req.get_buffer().cbegin() + std::distance( buf.cbegin(), body_pos );
 		}
 
 		_request_handler( req );
